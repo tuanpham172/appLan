@@ -17,15 +17,16 @@ jobs:
 
       - name: Auto-Detect and Build
         run: |
-          # Tìm thư mục chứa package.json (bỏ qua node_modules)
           APP_PATH=$(find . -name "package.json" -not -path "*/node_modules/*" -printf '%h\n' | head -n 1)
-          echo "Found app at: $APP_PATH"
           cd "$APP_PATH"
+          
+          # Xóa bỏ các tàn dư từ Windows để tránh lỗi Native Binding
+          rm -rf node_modules package-lock.json
           
           npm install --force
           npm run build --if-present
           
-          # Cài đặt và cấu hình Capacitor
+          # Cài đặt Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
           npx cap add android || true
