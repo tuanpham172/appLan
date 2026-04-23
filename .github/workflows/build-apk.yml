@@ -17,16 +17,14 @@ jobs:
 
       - name: Build Web Project
         run: |
-          # Tự động tìm package.json nếu nó nằm trong thư mục con
-          SUBDIR=$(find . -maxdepth 2 -name package.json -printf '%h\n' | head -n 1)
-          cd $SUBDIR
+          # Chọc thẳng vào thư mục greendays của bạn
+          cd "greendays---chấm-công-chill-chill"
           npm install --force
           npm run build --if-present
 
       - name: Setup Capacitor & Build APK
         run: |
-          SUBDIR=$(find . -maxdepth 2 -name package.json -printf '%h\n' | head -n 1)
-          cd $SUBDIR
+          cd "greendays---chấm-công-chill-chill"
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
           npx cap add android || true
