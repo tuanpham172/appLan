@@ -15,21 +15,23 @@ jobs:
         with:
           node-version: 18
 
-      - name: Build Web Project
+      - name: Auto-Detect and Build
         run: |
-          # Chọc thẳng vào thư mục greendays của bạn
-          cd "greendays---chấm-công-chill-chill"
+          # Tìm thư mục chứa package.json (bỏ qua node_modules)
+          APP_PATH=$(find . -name "package.json" -not -path "*/node_modules/*" -printf '%h\n' | head -n 1)
+          echo "Found app at: $APP_PATH"
+          cd "$APP_PATH"
+          
           npm install --force
           npm run build --if-present
-
-      - name: Setup Capacitor & Build APK
-        run: |
-          cd "greendays---chấm-công-chill-chill"
+          
+          # Cài đặt và cấu hình Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
           npx cap add android || true
           npx cap copy android
           
+          # Build APK
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug
