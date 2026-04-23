@@ -15,27 +15,34 @@ jobs:
         with:
           node-version: 18
 
-      - name: Auto-Detect and Build
+      - name: Hard Clean and Build
         run: |
           APP_PATH=$(find . -name "package.json" -not -path "*/node_modules/*" -printf '%h\n' | head -n 1)
           cd "$APP_PATH"
           
-          # Xóa bỏ các tàn dư từ Windows để tránh lỗi Native Binding
-          rm -rf node_modules package-lock.json
+          # Lệnh xóa cực mạnh để dọn dẹp node_modules lỡ upload từ Windows
+          rm -rf node_modules package-lock.json dist android
           
+          # Cài đặt lại từ đầu bản chuẩn cho Linux
           npm install --force
+          
+          # Build web
           npm run build --if-present
           
-          # Cài đặt Capacitor
+          # Thiết lập Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
           npx cap add android || true
           npx cap copy android
           
           # Build APK
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          if [ -d "android" ]; then
+            cd android
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            echo "Thư mục Android không tồn tại!" && exit 1
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
