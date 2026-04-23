@@ -1,0 +1,43 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Build Web Project
+        run: |
+          # Tự động tìm package.json nếu nó nằm trong thư mục con
+          SUBDIR=$(find . -maxdepth 2 -name package.json -printf '%h\n' | head -n 1)
+          cd $SUBDIR
+          npm install --force
+          npm run build --if-present
+
+      - name: Setup Capacitor & Build APK
+        run: |
+          SUBDIR=$(find . -maxdepth 2 -name package.json -printf '%h\n' | head -n 1)
+          cd $SUBDIR
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
+          npx cap add android || true
+          npx cap copy android
+          
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: "**/app/build/outputs/apk/debug/*.apk"
