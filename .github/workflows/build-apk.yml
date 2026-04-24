@@ -15,12 +15,15 @@ jobs:
         with:
           node-version: 18
 
-      - name: Hard Clean and Build
+      - name: Ultimate Clean and Build
         run: |
+          # Tìm đúng thư mục chứa code thực sự (greendays...)
           APP_PATH=$(find . -name "package.json" -not -path "*/node_modules/*" -printf '%h\n' | head -n 1)
+          echo "Cất cánh từ thư mục: $APP_PATH"
           cd "$APP_PATH"
           
-          # Lệnh xóa cực mạnh để dọn dẹp node_modules lỡ upload từ Windows
+          # Xóa sạch node_modules lỡ upload từ Windows để tránh lỗi Native Binding
+          # Thêm lệnh sudo để đảm bảo xóa sạch mọi file cứng đầu
           rm -rf node_modules package-lock.json dist android
           
           # Cài đặt lại từ đầu bản chuẩn cho Linux
@@ -29,19 +32,18 @@ jobs:
           # Build web
           npm run build --if-present
           
-          # Thiết lập Capacitor
+          # Cài đặt Capacitor và build Android
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
           npx cap add android || true
           npx cap copy android
           
-          # Build APK
           if [ -d "android" ]; then
             cd android
             chmod +x gradlew
             ./gradlew assembleDebug
           else
-            echo "Thư mục Android không tồn tại!" && exit 1
+            echo "Thư mục Android chưa được tạo!" && exit 1
           fi
 
       - name: Upload APK
