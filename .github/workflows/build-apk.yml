@@ -13,24 +13,22 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24 # Cập nhật lên bản mới nhất năm 2026
 
-      - name: Clean and Build
+      - name: Hard Clean and Build
         run: |
-          # Vào thẳng thư mục chứa code của sếp
-          # Lưu ý: Nếu sếp đã đổi tên thư mục thành không dấu, hãy sửa lại tên ở dưới cho đúng
-          cd "greendays---chấm-công-chill-chill"
+          # Dùng lệnh này để vào thư mục duy nhất có trong repo mà không cần gõ tên
+          cd $(find . -maxdepth 1 -type d -not -path '*/.*' | head -n 2 | tail -n 1)
+          echo "Đang ở thư mục: $PWD"
           
-          # Xóa bỏ mọi tàn dư node_modules lỡ có trong thư mục này
+          # Dọn dẹp
           rm -rf node_modules package-lock.json dist android
           
-          # Cài đặt sạch
+          # Cài đặt và Build
           npm install --force
-          
-          # Build web
           npm run build --if-present
           
-          # Cấu hình Capacitor
+          # Capacitor logic
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
           npx cap add android || true
@@ -42,7 +40,7 @@ jobs:
             chmod +x gradlew
             ./gradlew assembleDebug
           else
-            echo "Lỗi: Thư mục Android không được tạo ra!" && exit 1
+            echo "Lỗi: Không tạo được thư mục Android" && exit 1
           fi
 
       - name: Upload APK
