@@ -15,23 +15,23 @@ jobs:
         with:
           node-version: 24
 
-      - name: Set up JDK 21 # Nâng cấp lên Java 21 để fix lỗi "invalid source release"
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: gradle
+          # Đã xóa dòng cache: gradle ở đây để tránh lỗi tìm file
 
       - name: Hard Clean and Build
         run: |
-          # Tìm thư mục code
+          # Tìm thư mục code thực sự
           APP_PATH=$(find . -maxdepth 1 -type d -not -path '*/.*' | head -n 2 | tail -n 1)
           cd "$APP_PATH"
           
-          # Dọn dẹp tàn dư Windows
+          # Dọn dẹp
           rm -rf node_modules package-lock.json dist android
           
-          # Cài đặt và đóng gói
+          # Cài đặt và build web
           npm install --force
           npm run build --if-present
           
@@ -41,7 +41,7 @@ jobs:
           npx cap add android || true
           npx cap copy android
           
-          # Build APK với Java 21
+          # Build APK
           if [ -d "android" ]; then
             cd android
             chmod +x gradlew
