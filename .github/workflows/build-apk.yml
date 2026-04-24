@@ -20,38 +20,30 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          # Đã xóa dòng cache: gradle ở đây để tránh lỗi tìm file
 
       - name: Hard Clean and Build
         run: |
-          # Tìm thư mục code thực sự
-          APP_PATH=$(find . -maxdepth 1 -type d -not -path '*/.*' | head -n 2 | tail -n 1)
+          # Tìm thư mục chứa package.json thực sự (ưu tiên gLang2)
+          APP_PATH=$(find . -name "package.json" -not -path "*/node_modules/*" -printf '%h\n' | sort -r | head -n 1)
+          echo "Building from: $APP_PATH"
           cd "$APP_PATH"
           
-          # Dọn dẹp
           rm -rf node_modules package-lock.json dist android
           
-          # Cài đặt và build web
           npm install --force
           npm run build --if-present
           
-          # Khởi tạo Android bằng Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/android
-          npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
+          npx cap init "AppLanV2" "com.tuanpham.applanv2" --web-dir dist || true
           npx cap add android || true
           npx cap copy android
           
-          # Build APK
-          if [ -d "android" ]; then
-            cd android
-            chmod +x gradlew
-            ./gradlew assembleDebug
-          else
-            echo "Lỗi: Không tìm thấy thư mục android" && exit 1
-          fi
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
+          name: app-debug-v2
           path: "**/app/build/outputs/apk/debug/*.apk"
