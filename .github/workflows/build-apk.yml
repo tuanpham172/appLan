@@ -13,34 +13,41 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24 # Cập nhật lên bản mới nhất năm 2026
+          node-version: 24
+
+      - name: Set up JDK 21 # Nâng cấp lên Java 21 để fix lỗi "invalid source release"
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: gradle
 
       - name: Hard Clean and Build
         run: |
-          # Dùng lệnh này để vào thư mục duy nhất có trong repo mà không cần gõ tên
-          cd $(find . -maxdepth 1 -type d -not -path '*/.*' | head -n 2 | tail -n 1)
-          echo "Đang ở thư mục: $PWD"
+          # Tìm thư mục code
+          APP_PATH=$(find . -maxdepth 1 -type d -not -path '*/.*' | head -n 2 | tail -n 1)
+          cd "$APP_PATH"
           
-          # Dọn dẹp
+          # Dọn dẹp tàn dư Windows
           rm -rf node_modules package-lock.json dist android
           
-          # Cài đặt và Build
+          # Cài đặt và đóng gói
           npm install --force
           npm run build --if-present
           
-          # Capacitor logic
+          # Khởi tạo Android bằng Capacitor
           npm install @capacitor/core @capacitor/cli @capacitor/android
           npx cap init "AppLan" "com.tuanpham.applan" --web-dir dist || true
           npx cap add android || true
           npx cap copy android
           
-          # Build APK
+          # Build APK với Java 21
           if [ -d "android" ]; then
             cd android
             chmod +x gradlew
             ./gradlew assembleDebug
           else
-            echo "Lỗi: Không tạo được thư mục Android" && exit 1
+            echo "Lỗi: Không tìm thấy thư mục android" && exit 1
           fi
 
       - name: Upload APK
